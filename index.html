@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Creare Proiect de Lecție (AI Integrat)</title>
   
+  <style>html,body{margin:0;padding:0;}</style>
   <script src="https://cdn.tailwindcss.com"></script>
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -25,14 +26,13 @@
     }
   </script>
 </head>
-<body class="bg-background text-gray-900 font-sans antialiased min-h-screen p-4 md:p-8">
+<body class="bg-background text-gray-900 font-sans antialiased min-h-screen p-0 sm:p-4 md:p-8 m-0">
 
   <div id="root"></div>
 
   <script type="text/babel">
     const { useState, useEffect } = React;
 
-    const GEMINI_API_KEY = 'AIzaSyA8bkUdYigljB8z8uYGpv5gPnL_FcVnwUY';
     const TEMPLATE_RELIGIE_ID = '1DadlEUDNDtgz14Ij-lH8HnNf__iD8alf9oUEDGyEv34';
     const DEPLOYMENT_ID = 'AKfycbz1CX485HuxnHeOdE5xSH7nrFpq1MZ1JRuQDETasUWN8zE80gIpn4TyyPhn1meGomrM';
 
@@ -252,134 +252,32 @@
 
       const removeStage = (id) => setStages(stages.filter(stage => stage.id !== id));
 
+      // Apelurile AI trec prin Apps Script; cheia Gemini nu mai este în pagină.
+      const callAI = async (prompt, mode) => {
+        const response = await fetch(`https://script.google.com/macros/s/${DEPLOYMENT_ID}/exec`, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'gemini', mode, prompt, system: isReligie(formData.disciplina) ? REGULI_ORTODOX : '' })
+        });
+        const result = await response.json();
+        if (result.status !== 'success') throw new Error(result.message || 'Eroare necunoscută de la script.');
+        return result.text;
+      };
+
       const callGeminiAPI = async (prompt) => {
-        // Folosim endpoint-ul v1alpha pentru modelul gemini-3-flash-preview
-        const url = `https://generativelanguage.googleapis.com/v1alpha/models/gemini-3-flash-preview:generateContent?key=${GEMINI_API_KEY}`;
-        
-        const payload = {
-          contents: [
-            {
-              role: 'user',
-              parts: [{ text: prompt }]
-            }
-          ],
-          ...(isReligie(formData.disciplina) && { systemInstruction: { parts: [{ text: REGULI_ORTODOX }] } }),
-          generationConfig: {
-            responseMimeType: 'application/json',
-            temperature: 0.1,
-            // Activăm raționamentul avansat pentru planuri și obiective mult mai bune
-            thinkingConfig: {
-              thinkingLevel: "HIGH" 
-            }
-          }
-        };
-
-        const retries = 5;
-        const delays = [1000, 2000, 4000, 8000, 16000];
-
-        for (let i = 0; i < retries; i++) {
+        let lastError;
+        for (let i = 0; i < 2; i++) {
           try {
-            const response = await fetch(url, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(payload)
-            });
-
-            if (!response.ok) {
-              if (response.status === 429 && i < retries - 1) {
-                await new Promise(res => setTimeout(res, delays[i]));
-                continue; 
-              }
-              const data = await response.json().catch(() => ({}));
-              throw new Error(data.error?.message || `Eroare HTTP: ${response.status}`);
-            }
-
-            const data = await response.json();
-            
-            // 1. Combinăm tot textul returnat (pentru a prinde și gândirea și răspunsul final)
-            const parts = data.candidates?.[0]?.content?.parts || [];
-            let rawText = parts.map(p => p.text || '').join('\n');
-            
-            if (!rawText.trim()) throw new Error("Răspuns gol de la API.");
-
-            // 2. Curățăm backticks-urile specifice markdown-ului
-            rawText = rawText.replace(/```json/gi, '').replace(/```/gi, '').trim();
-            
-            // 3. Extragem STRICT zona de Array JSON [...] ignorând restul textului "gândit" de Gemini
-            const jsonArrayMatch = rawText.match(/\[[\s\S]*\]/);
-            if (jsonArrayMatch) {
-              rawText = jsonArrayMatch[0];
-            }
-            
-            // 4. Parsăm rezultatul curățat
-            const parsedResult = JSON.parse(rawText);
-            
-            // Ne asigurăm că returnăm mereu un array pentru a preveni eroarea "Cannot read properties of undefined (reading 'map')"
-            return Array.isArray(parsedResult) ? parsedResult : [];
-
-          } catch (error) {
-            if (i === retries - 1) {
-              console.error("Eroare completă JSON API:", error);
-              throw error;
-            }
-            await new Promise(res => setTimeout(res, delays[i]));
-          }
+            let t = (await callAI(prompt, 'json')).replace(/```json/gi, '').replace(/```/g, '').trim();
+            const iA = t.indexOf('['), iO = t.indexOf('{');
+            if (iA >= 0 && (iO < 0 || iA < iO)) t = t.slice(iA, t.lastIndexOf(']') + 1);
+            else if (iO >= 0) t = t.slice(iO, t.lastIndexOf('}') + 1);
+            return JSON.parse(t);
+          } catch (error) { lastError = error; }
         }
+        throw lastError;
       };
 
-      const callGeminiTextAPI = async (prompt) => {
-        // Am actualizat URL-ul pentru a folosi exact gemini-1.5-flash (compatibil free-tier)
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-        
-        const payload = {
-          contents: [
-            {
-              role: 'user',
-              parts: [{ text: prompt }]
-            }
-          ],
-          ...(isReligie(formData.disciplina) && { systemInstruction: { parts: [{ text: REGULI_ORTODOX }] } }),
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 2500
-          }
-        };
-
-        const retries = 5;
-        const delays = [1000, 2000, 4000, 8000, 16000];
-
-        for (let i = 0; i < retries; i++) {
-          try {
-            const response = await fetch(url, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(payload)
-            });
-
-            if (!response.ok) {
-              if (response.status === 429 && i < retries - 1) {
-                await new Promise(res => setTimeout(res, delays[i]));
-                continue;
-              }
-              const data = await response.json().catch(() => ({}));
-              throw new Error(data.error?.message || `Eroare HTTP: ${response.status}`);
-            }
-
-            const data = await response.json();
-            const textResult = data.candidates?.[0]?.content?.parts?.[0]?.text;
-            
-            if (!textResult) throw new Error("Răspuns gol de la API.");
-            
-            return textResult;
-          } catch (error) {
-            if (i === retries - 1) {
-              console.error("Eroare completă Text API:", error);
-              throw error;
-            }
-            await new Promise(res => setTimeout(res, delays[i]));
-          }
-        }
-      };
+      const callGeminiTextAPI = async (prompt) => callAI(prompt, 'text');
 
       const generateCompetenciesAI = async () => {
         setAppError({ show: false, message: '', details: '' }); // Resetăm eroarea
@@ -571,7 +469,7 @@ Pentru a genera un document impecabil, trebuie să respecți STRICT următoarele
       );
 
       return (
-        <div className="max-w-5xl mx-auto pb-12">
+        <div className="max-w-5xl mx-auto pb-4 px-0">
           
           {/* Header */}
           <div className="mb-8 text-center md:text-left flex flex-col md:flex-row justify-between items-center gap-4">
@@ -616,7 +514,7 @@ Pentru a genera un document impecabil, trebuie să respecți STRICT următoarele
           {/* ------------------------------- */}
 
           {/* Card 1: Antet */}
-          <div className="bg-surface shadow-sm border border-gray-100 rounded-2xl p-6 mb-6">
+          <div className="bg-surface shadow-sm border border-gray-100 rounded-2xl p-3 sm:p-6 mb-6">
             <h2 className="text-xl font-semibold mb-4 text-gray-800">1. Antet & Date Generale</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -689,7 +587,7 @@ Pentru a genera un document impecabil, trebuie să respecți STRICT următoarele
           </div>
 
           {/* Card 2: Competențe & Obiective */}
-          <div className="bg-surface shadow-sm border border-gray-100 rounded-2xl p-6 mb-6">
+          <div className="bg-surface shadow-sm border border-gray-100 rounded-2xl p-3 sm:p-6 mb-6">
             <h2 className="text-xl font-semibold mb-6 text-gray-800">2. {docType === 'proiect' ? 'Strategie & Obiective' : 'Obiective'}</h2>
             
             <div className="space-y-8">
@@ -755,7 +653,7 @@ Pentru a genera un document impecabil, trebuie să respecți STRICT următoarele
           </div>
 
           {/* Card 3: Etapele Lecției */}
-          <div className="bg-surface shadow-sm border border-gray-100 rounded-2xl p-6 mb-6">
+          <div className="bg-surface shadow-sm border border-gray-100 rounded-2xl p-3 sm:p-6 mb-6">
             <div className="flex justify-between items-center mb-4 border-b pb-4">
               <h2 className="text-xl font-semibold text-gray-800">3. {docType === 'proiect' ? 'Etapele Lecției' : 'Secvențele Lecției'}</h2>
               <div className="flex gap-2">
@@ -849,7 +747,7 @@ Pentru a genera un document impecabil, trebuie să respecți STRICT următoarele
           </div>
 
           {/* Card 4: Anexe (Opțional) */}
-          <div className="bg-surface shadow-sm border border-gray-100 rounded-2xl p-6 mb-6">
+          <div className="bg-surface shadow-sm border border-gray-100 rounded-2xl p-3 sm:p-6 mb-6">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-gray-800">4. Anexe (Opțional)</h2>
               <label className="flex items-center cursor-pointer">
@@ -913,7 +811,7 @@ Pentru a genera un document impecabil, trebuie să respecți STRICT următoarele
           </div>
 
           {/* Card 5: Export */}
-          <div className="bg-surface shadow-sm border border-gray-100 rounded-2xl p-6">
+          <div className="bg-surface shadow-sm border border-gray-100 rounded-2xl p-3 sm:p-6">
             <h2 className="text-xl font-semibold mb-6 text-gray-800">5. Exportă Documentul</h2>
             
             {!resultLinks ? (
