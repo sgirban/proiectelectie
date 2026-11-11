@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Creare Proiect de Lecție (AI Integrat)</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#4F46E5',
+            secondary: '#6366F1',
+            background: '#F9FAFB',
+            surface: '#FFFFFF',
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-background text-gray-900 font-sans antialiased min-h-screen p-4 md:p-8">
+
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    const GEMINI_API_KEY = 'AIzaSyA8bkUdYigljB8z8uYGpv5gPnL_FcVnwUY';
+    const TEMPLATE_RELIGIE_ID = '1DadlEUDNDtgz14Ij-lH8HnNf__iD8alf9oUEDGyEv34';
+    const DEPLOYMENT_ID = 'AKfycbz1CX485HuxnHeOdE5xSH7nrFpq1MZ1JRuQDETasUWN8zE80gIpn4TyyPhn1meGomrM';
+
+    const allCompetencies = {
+      'IX': ['1.1. Identificarea propozițiilor elementare din care este alcătuit un enunț matematic','1.2. Identificarea elementelor specifice șirurilor/progresiilor în contexte variate','1.3. Identificarea unor relații de tip dependență funcțională între variabile sau entități, pentru a evidenția elemente ale funcțiilor','1.4. Identificarea pe cercul trigonometric a punctelor asociate unor numere reale','1.5. Identificarea elementelor necesare pentru calcularea unor măsuri (lungimi de segmente, unghiuri, arii)','2.1. Identificarea operațiilor cu propoziții elementare din cadrul unui enunț matematic','2.2. Efectuarea de calcule pentru determinarea elementelor șirurilor, progresiilor aritmetice și geometrice, utilizând formule specifice','2.3. Extragerea unor date matematice de tip cantitativ, calitativ și structural, din reprezentări grafice pentru a descrie proprietățile unei funcții (monotonie, convexitate, puncte de extrem etc.) într-o situație practică dată','2.4. Stabilirea unor caracteristici calitative/cantitative folosind funcții trigonometrice, inclusiv folosind instrumente digitale','2.5. Aplicarea unor metode adecvate pentru determinarea unor distanțe, a unor măsuri de unghiuri și a unor arii','3.1. Determinarea valorii de adevăr a unui enunț matematic format din propoziții legate prin operatori logici','3.2. Aplicarea algoritmilor de calcul pentru determinarea unor termeni și a sumelor unor termeni consecutivi ai progresiilor aritmetice și geometrice, în diferite contexte','3.3. Aplicarea unor concepte și algoritmi matematici (funcții, rate de variație etc.), pentru a interpreta reprezentări grafice în scopul extragerii de informații relevante pentru rezolvarea, în contexte matematice, a unor probleme practice','3.4. Calcularea valorii unei funcții trigonometrice când se cunosc informații despre valorile unei alte funcții trigonometrice','3.5. Determinarea măsurilor unor unghiuri și a lungimilor unor segmente utilizând relații metrice','4.1. Precizarea structurii logice a unui enunț','4.2. Transpunerea în limbaj specific matematic a unor situații din viața cotidiană referitoare la șiruri sau progresii în scopul analizării comportamentului acestora','4.3. Exprimarea unor concluzii și justificări matematice, utilizând limbajul specific funcțiilor (simboluri, formule, expresii, reprezentări), pentru a comunica informații extrase din reprezentări grafice, în contexte matematice practice','4.4. Stabilirea unor relații matematice utilizând calculul trigonometric','4.5. Caracterizarea în limbaj matematic a unei configurații geometrice folosind elemente de trigonometrie sau relații metrice','5.1. Formularea unui enunț matematic (axiomă, definiție, relație/proprietate/teoremă) asociat unei situații date','5.2. Analizarea unor situații date în contexte intra și interdisciplinare, selectând modelul de progresie adecvat și metoda de rezolvare eficientă în funcție de datele disponibile','5.3. Analizarea unor situații date prin interpretarea reprezentărilor grafice și evidențierea soluțiilor posibile pentru a interpreta situații reale și a formula concluzii argumentate în contexte intra și interdisciplinare','5.4. Analizarea proprietăților funcțiilor trigonometrice folosind reprezentarea grafică sau cercul trigonometric','5.5. Aplicarea unor metode variate pentru optimizarea calculelor de distanțe, de măsuri de unghiuri și de arii','6.1. Validarea unui enunț matematic asociat unei situații date','6.2. Modelarea matematică, folosind șirurile sau progresiile, a unor situații reale pentru interpretarea implicațiilor în contexte interdisciplinare și pentru luarea unor decizii fundamentate pe datele obținute','6.3. Modelarea unei situații reale, utilizând un model matematic (funcții, relații) construit pe baza datelor extrase din reprezentări grafice, pentru a explica, a anticipa sau a optimiza rezultate în contexte precum economie, biologie sau fizică','6.4. Descrierea unor relații între mărimi din diferite domenii, cu ajutorul funcțiilor trigonometrice','6.5. Modelarea unor configurații geometrice utilizând metode metrice, trigonometrice, sintetice'],
+      'X': ['1.1. Identificarea unor expresii ce conțin puteri, exponențiale și logaritmi, în diferite contexte matematice și practice','1.2. Identificarea elementelor de combinatorică în diferite contexte matematice și din viața cotidiană','1.3. Identificarea numerelor complexe și a formelor de reprezentare a lor în diferite contexte','1.4. Identificarea unor polinoame, funcții polinomiale sau ecuații algebrice care verifică condiții date','1.5. Identificarea unor exemple de fenomene care pot fi modelate matematic, utilizând concepte statistice/probabilități','2.1. Prelucrarea datelor descrise cu ajutorul funcțiilor putere, exponențială sau logaritmică, pentru a stabili proprietățile ale acestora','2.2. Prelucrarea unor situații matematice sau din viața cotidiană, a căror rezolvare necesită elemente de combinatorică','2.3. Efectuarea operațiilor cu numere complexe, în contexte variate de calcul','2.4. Efectuarea operațiilor cu polinoame, prin analogie cu calculul numeric, folosind coeficienții pentru extragerea de informații','2.5. Prelucrarea unor informații cuprinse în seturi de date (probabilistice sau statistice) extrase din contexte practice și prezentate sub diferite forme: text, tabele, diagrame, grafice','3.1. Utilizarea algoritmilor și a proprietăților funcțiilor putere, exponențială și logaritmică pentru rezolvarea de ecuații, inecuații și probleme din contexte matematice','3.2. Utilizarea elementelor de combinatorică pentru rezolvarea unor probleme matematice','3.3. Aplicarea unor algoritmi specifici calculului pentru rezolvarea de probleme cu numere complexe','3.4. Folosirea calculului polinomial și a descompunerii în factori a polinoamelor în probleme de divizibilitate și în rezolvări de ecuații','3.5. Aplicarea algoritmilor de calcul și a funcțiilor numerice în studiul seriilor de date (probabilistice sau statistice)','4.1. Exprimarea matematică a proprietăților funcțiilor putere, exponențială și logaritmică, pentru aplicarea lor în ecuații/inecuații corespunzătoare','4.2. Exprimarea matematică a proprietăților permutărilor, aranjamentelor, combinărilor și a binomului lui Newton','4.3. Exprimarea în limbaj specific numerelor complexe a redactării raționamentelor matematice','4.4. Utilizarea limbajului specific polinoamelor în probleme de divizibilitate, ireductibilitate și în studiul ecuațiilor asociate','4.5. Descrierea în limbajul specific statisticii matematice/probabilităților a unor fenomene și a metodelor de analizare a acestora','5.1. Analizarea proprietăților și comportamentului funcțiilor putere, exponențială și logaritmică, precum și a relațiilor dintre acestea, în contexte matematice sau cotidiene','5.2. Analizarea relațiilor și a proprietăților permutărilor, aranjamentelor, combinărilor și a binomului lui Newton','5.3. Interpretarea geometrică a operațiilor și a relațiilor dintre numere complexe','5.4. Analizarea unor situații date, prin determinarea, verificarea și implementarea elementelor specifice studiului polinoamelor','5.5. Analizarea informațiilor privind contexte practice/fenomene din realitatea imediată pentru alegerea/optimizarea metodelor de prelucrare a acestora și de prezentare a concluziilor extrase','6.1. Modelarea matematică a situațiilor cotidiene din domenii care implică funcția putere, exponențială sau logaritmică, inclusiv ecuații și inecuații în care acestea apar','6.2. Modelarea situațiilor matematice sau din viața cotidiană, utilizând elemente de combinatorică','6.3. Modelarea unor situații practice utilizând numere complexe','6.4. Modelarea unor situații practice utilizând noțiunea de polinom sau ecuații algebrice','6.5. Elaborarea unor proiecte care au ca obiectiv studiul unor fenomene din viața cotidiană, utilizând metode statistice/probabilistice de prelucrare, de analizare a datelor și de extragere a concluziilor'],
+      'XI': ['1.1. Identificarea tipurilor de matrice și a proprietăților care le definesc, din diferite forme de scriere a acestora, în contexte matematice și aplicative','1.2. Recunoașterea elementelor specifice unui sistem de ecuații liniare în diferite contexte','1.3. Identificarea elementelor și relațiilor caracteristice dreptelor în planul cartezian (punct, pantă, ecuație, poziții relative), din enunțuri, reprezentări grafice sau seturi de date numerice','1.4. Identificarea proprietăților unor șiruri de numere reale (mărginire, monotonie, convergență) utilizând diferite moduri de descriere a acestora (tabele, grafice sau text)','1.5. Identificarea comportamentelor limită și a proprietăților de continuitate ale funcțiilor, din reprezentări grafice, tabele de valori sau expresii simbolice date','1.6. Identificarea relațiilor dintre derivată și proprietăți ale funcțiilor (monotonie, extreme, concavitate/convexitate, puncte de inflexiune), din reprezentări grafice, simbolice sau numerice','2.1. Prelucrarea datelor organizate sub formă matriceală, prin operații de adunare, scădere și înmulțire sau prin determinanți, în diverse contexte','2.2. Prelucrarea datelor numerice și a relațiilor dintre coeficienți pentru a determina condițiile de compatibilitate și structura soluțiilor unui sistem de ecuații liniare','2.3. Prelucrarea datelor numerice și geometrice pentru a obține ecuația unei drepte, evidențiind relațiile dintre coeficienți, puncte și pante, din descrieri verbale, grafice sau algebrice','2.4. Prelucrarea datelor numerice sau simbolice asociate șirurilor de numere reale pentru a evidenția relații de variație, mărginire și comportament limită','2.5. Prelucrarea datelor numerice, grafice și simbolice pentru a evidenția comportamentul limită și proprietățile de continuitate ale funcțiilor reale','2.6. Prelucrarea unor informații numerice, simbolice și grafice pentru a evidenția rolul derivatei întâi și al derivatei a doua în descrierea comportamentului unei funcții (monotonie, puncte de extrem, concavitate/convexitate, puncte de inflexiune)','3.1. Utilizarea regulilor de calcul pentru efectuarea operațiilor cu matrice și determinanți','3.2. Aplicarea algoritmilor și metodelor de calcul în rezolvarea unui sistem de ecuații liniare','3.3. Utilizarea unor rezultate specifice geometriei analitice în calcularea ariilor unor suprafețe plane în contexte variate','3.4. Utilizarea rezultatelor specifice limitelor de șiruri și a tehnicilor de prelucrare a termenilor generali pentru calcularea limitelor de șiruri','3.5. Utilizarea criteriilor cu șiruri și a limitelor fundamentale în calcularea limitelor de funcții','3.6. Utilizarea regulilor de derivare și a concluziilor teoremelor studiate în analizarea variației funcțiilor','4.1. Exprimarea în limbaj simbolic a unui determinant utilizând definiția sau dezvoltarea acestuia în funcție de elementele unei linii/coloane','4.2. Exprimarea în limbaj specific matematicii a etapelor de rezolvare a unui sistem de ecuații liniare dat','4.3. Exprimarea în limbaj matematic a relațiilor geometrice și a proprietăților caracterizate prin ecuații ale dreptelor în planul cartezian','4.4. Exprimarea proprietăților numerice și a relațiilor de variație ale șirurilor de numere reale în limbaj specific analizei matematice','4.5. Exprimarea în limbaj matematic a proprietăților unei funcții continue pentru stabilirea semnului funcției și/sau a imaginii acesteia','4.6. Exprimarea, în limbaj matematic standardizat, a proprietăților funcțiilor derivabile și a concluziilor privind comportamentul acestora','5.1. Analizarea condițiilor de inversabilitate a unei matrice pătratice','5.2. Analizarea compatibilității unui sistem de ecuații liniare (rang, Kronecker–Capelli sau Rouché)','5.3. Analizarea pozițiilor relative a două drepte in plan (paralele, concurente) în diferite configurații','5.4. Analizarea unui șir folosind proprietățile de monotonie și mărginire pentru studiul convergenței acestuia','5.5. Analizarea comportamentului unei funcții în vecinătatea unui punct prin calcularea limitelor laterale','5.6. Interpretarea datelor din tabelul de variație a unei funcții reale și evidențierea celor mai importante rezultate (valori minime, valori maxime, intervale de monotonie și de convexitate/ concavitate, puncte de inflexiune)','6.1. Modelarea situațiilor de compatibilitate a unor ecuații matriceale folosind determinanți și matrice inversabile','6.2. Modelarea situațiilor practice (de exemplu, probleme de resurse, amestecuri, echilibru chimic) folosind sisteme de ecuații liniare','6.3. Modelarea situațiilor practice cu ajutorul conceptelor de geometrie analitică (distanțe, arii, coliniaritate)','6.4. Modelarea unor procese de creștere sau descreștere (de exemplu, amortizare, dobânzi, populație) prin șiruri numerice','6.5. Modelarea fenomenelor continue sau discontinue prin limite și funcții continue','6.6. Modelarea unor fenomene de variație continuă prin funcții (costuri, productivitate, optimizare)'],
+      'XII': ['1.1. Identificarea unor legi de compoziție și a proprietăților acestora pe mulțimile pe care sunt definite','1.2. Identificarea unor grupuri sau subgrupuri în funcție de proprietățile legilor de compoziție definite pe diferite mulțimi','1.3. Identificarea conicelor și a elementelor lor caracteristice','1.4. Identificarea proprietăților unor funcții reprezentate în diferite moduri','1.5. Identificarea legăturilor dintre o funcție și derivata sau primitiva acesteia','1.6. Identificarea elementelor care conduc la calcularea și utilizarea unei integrale definite','2.1. Compararea proprietăților unor legi de compoziție definite pe diferite mulțimi','2.2. Compararea proprietăților unor grupuri definite pe diferite mulțimi','2.3. Utilizarea definițiilor geometrice ale conicelor pentru a le deduce ecuațiile canonice','2.4. Utilizarea definițiilor geometrice și a cunoștințelor de analiză matematică pentru determinarea asimptotelor unor funcții','2.5. Utilizarea unor concepte matematice pentru a stabili dacă o funcție admite sau nu primitive','2.6. Prelucrarea unor concepte matematice pe baza cărora se obțin metode pentru determinarea integralelor definite ale unor funcții','3.1. Folosirea proprietăților operațiilor binare în calculele specifice structurilor algebrice de semigrup sau monoid','3.2. Stabilirea structurii de grup sau subgrup a unei mulțimi, în raport cu diferite legi de compoziție','3.3. Utilizarea unor algoritmi pentru reprezentarea grafică a conicelor','3.4. Prelucrarea calitativă a asimptotelor și proprietăților derivatei întâi și derivatei a doua ale unei funcții, în vederea trasării graficului acesteia','3.5. Prelucrarea unor concepte matematice pe baza cărora se obțin metode pentru determinarea primitivelor unor funcții','3.6. Aplicarea metodelor de calcul pentru determinarea integralei definite a unei funcții','4.1. Stabilirea tipului de structură algebrică a unei mulțimi, prin verificarea proprietăților unor legi de compoziție concrete definite pe aceasta','4.2. Folosirea unor procedee adecvate pentru soluționarea unor probleme specifice de teoria grupurilor','4.3. Stabilirea elementelor unor configurații geometrice','4.4. Trasarea reprezentării grafice a unei funcții utilizând informațiile din tabelul său de variație și eventualele sale asimptote','4.5. Aplicarea unor metode de calcul adecvate pentru determinarea primitivelor unei funcții','4.6. Folosirea continuității sau a monotoniei unei funcții pentru a stabili proprietăți ale integralei sale definite','5.1. Compararea proprietăților unor legi de compoziție în funcție de mulțimile pe care sunt definite','5.2. Stabilirea unor morfisme sau izomorfisme de grupuri','5.3. Determinarea ecuațiilor unor conice cu diferite caracteristici particulare','5.4. Implementarea unei strategii pentru rezolvarea unor situații concrete, utilizând reprezentarea grafică a funcțiilor','5.5. Interpretarea proprietăților unei funcții și a metodelor de integrare, pentru a îi determina primitivele','5.6. Alegerea criteriilor adecvate pentru stabilirea integrabilității unei funcții','6.1. Utilizarea în alte domenii a proprietăților structurilor algebrice','6.2. Utilizarea grupurilor în aritmetică și în geometrie','6.3. Utilizarea funcțiilor integrabile pentru calcularea unor arii delimitate de conice','6.4. Modelarea unor situații concrete care conduc la studiul graficului unei funcții','6.5. Modelarea unor situații concrete care conduc la calcularea unei integrale nedefinite','6.6. Modelarea problemelor din diferite domenii prin utilizarea integralelor definite']
+    };
+
+    const tipuriLectieOptions = [
+      "Lecție de dobândire de noi cunoștințe",
+      "Lecție de consolidare a cunoștințelor",
+      "Lecție de formare de priceperi și deprinderi",
+      "DIVIDER",
+      "Lecție de recapitulare și sistematizare",
+      "Lecție de evaluare",
+      "Lecție mixtă"
+    ];
+
+    const momenteLectieOptions = [
+      "Momentul organizatoric",
+      "Captarea atenției",
+      "Reactualizarea cunoștințelor",
+      "Anunțarea temei și a obiectivelor",
+      "DIVIDER",
+      "Dirijarea învățării (Predarea noului conținut)",
+      "Fixarea cunoștințelor",
+      "Obținerea performanței și transferul",
+      "Încheierea activității"
+    ];
+
+    const competenteReligie = {
+      'P': ["1.1. Recunoașterea unor elemente de bază ale credinței religioase", "1.2. Observarea caracteristicilor comportamentale ale unui creștin, pe baza valorificării unor situații din viața de zi cu zi", "1.3. Aplicarea unor reguli de comportament moral-creștin în contexte de viață familiare", "2.1. Asumarea unor responsabilități în cadrul grupurilor din care face parte, la propunerea adultului", "2.2. Identificarea unor elemente comune și de diferențiere între oameni", "3.1. Explicarea semnificației unor evenimente religioase cunoscute", "3.2. Identificarea unor sărbători și evenimente cu semnificații religioase, cu incidență asupra vieții familiei"],
+      'I': ["1.1. Descrierea unor aspecte de bază ale credinței religioase, prin apelul la experiența proprie", "1.2. Identificarea caracteristicilor comportamentale ale unui creștin, pe baza valorificării unor situații din viața de zi cu zi și a exemplelor unor persoane din Biblie", "1.3. Aplicarea unor reguli de comportament moral-creștin într-o serie de contexte de viață reale sau imaginare", "2.1. Manifestarea interesului pentru asumarea unor responsabilități în cadrul grupurilor din care face parte", "2.2. Observarea unor elemente de diversitate în cadrul diferitelor grupuri", "3.1. Explicarea semnificației unor evenimente religioase din viața comunității", "3.2. Prezentarea unor sărbători și evenimente cu conținuturi și semnificații religioase, cu incidență asupra vieții familiei și a comunității"],
+      'II': ["1.1. Explicarea unor aspecte specifice propriei credințe religioase", "1.2. Evidențierea caracteristicilor comportamentale ale unor modele de credință", "1.3. Aplicarea în mod autonom a unor reguli de comportament moral-creștin în diferite contexte de viață reale sau imaginare", "2.1. Asumarea în mod explicit a unor responsabilități în cadrul grupurilor din care face parte", "2.2. Descrierea unor elemente de diversitate în cadrul diferitelor grupuri", "3.1. Explicarea importanței unor evenimente religioase din viața comunității și a societății", "3.2. Explicarea rolului diferitelor sărbători și evenimente cu conținuturi și semnificații religioase, cu incidență asupra vieții familiei și comunității"],
+      'V': ["1.1. Explicarea rolului personalităților din Vechiul Testament în devenirea umanității/istoria mântuirii", "1.2. Descrierea unor aspecte caracteristice religiei proprii, utilizând concepte specifice", "1.3. Identificarea mesajului moral-religios din texte sau suporturi expresive date (biblice, religioase, literare, plastice, istorice)", "2.1. Exprimarea unor aprecieri personale privind semnificația morală a comportamentului persoanelor din textele studiate", "2.2. Selectarea unor reguli de comportament moral-religios din diferite contexte de viață, din perspectiva unor criterii date", "3.1. Evidențierea unor elemente definitorii ale propriei identități religioase", "3.2. Identificarea unor responsabilități față de sine și față de comunitate, după repere date, prin raportare la valorile moral-religioase", "3.3. Prezentarea modalităților de celebrare a diferitelor sărbători și tradiții religioase, în viața personală și în comunitățile de apartenență"],
+      'VI': ["1.1. Prezentarea cronologică a principalelor evenimente din viața și activitatea Mântuitorului Iisus Hristos, pe baza textelor biblice", "1.2. Integrarea unor concepte specifice în prezentarea de evenimente religioase, istorice și culturale", "1.3. Selectarea de informații adecvate din surse și cu mijloace variate, pe teme cu relevanță moral-religioasă", "2.1. Prezentarea unor modele spirituale, pe baza textelor biblice, religioase, literare studiate", "2.2. Relaționarea pozitivă cu colegii, în activități, sarcini de învățare, situații-problemă, utilizând reguli de comportament moral-religios", "3.1. Analizarea unor moduri de manifestare a diversității religioase în viața personală, a grupurilor de apartenență, a comunității", "3.2. Asumarea unor responsabilități față de sine și față de ceilalți, prin raportarea la valorile moral-religioase", "3.3. Analizarea rolului diferitelor sărbători și tradiții religioase în viața personală și a comunității, cu identificarea de elemente de specificitate pentru diferite comunități"],
+      'VII': ["1.1. Analizarea manifestării lucrării Duhului Sfânt în viața Bisericii și în devenirea spirituală a omului, pe baza unor texte religioase", "1.2. Compararea unor modalități diverse de manifestare a vieții religioase sau a unor aspecte de învățătură religioasă", "1.3. Analizarea unui mesaj moral-religios, comunicat în forme variate", "2.1. Identificarea de repere și modele dezirabile din punct de vedere religios, în plan personal și social", "2.2. Formularea unor opinii personale privind aplicarea normelor moral-religioase în viața personală și a grupurilor de apartenență, în relație cu normele civice", "3.1. Argumentarea importanței respectului pentru diversitate și a comunicării între persoane/grupuri", "3.2. Manifestarea reflecției critice față de responsabilități asumate în viața proprie și a comunității, prin raportare la valori moral-religioase", "3.3. Argumentarea importanței participării fiecărei persoane la viața spirituală a comunității, ca membru activ al acesteia"],
+      'VIII': ["1.1. Argumentarea importanței asumării modelului de iubire trinitară pentru împlinirea personală și a comunității", "1.2. Formularea de argumente pentru susținerea importanței unor idei, fapte, evenimente cu relevanță moral-religioasă, în plan individual și social", "1.3. Compararea modurilor în care un mesaj religios poate fi exprimat prin forme de comunicare diferite", "2.1. Evidențierea implicațiilor moral-religioase pe care modelele urmate le pot avea în viața personală și socială", "2.2. Asumarea de responsabilități specifice în contexte școlare și extrașcolare de colaborare cu ceilalți, respectând diversitatea grupului, inclusiv cea religioasă", "3.1. Susținerea rolului valorilor spirituale comune ale oamenilor, ca factor de promovare a comuniunii și ca sursă de rezolvare a problemelor ce apar în viața cotidiană", "3.2. Analizarea calităților personale care susțin etapele propriei deveniri, în relație cu valorile moral-religioase", "3.3. Implicarea în activități și proiecte individuale și de grup, centrate pe nevoi și aspecte de viață spirituală a comunității"],
+      'IX': ["1.1. Definirea componentelor majore ale identității religioase", "1.2. Explicarea caracteristicilor care definesc învățătura de credință creștină", "1.3. Descrierea mesajului teologic, cultural și literar al unor texte biblice, evidențiind valoarea lor universală", "2.1. Identificarea elementelor definitorii ale credințelor și religiilor din antichitate", "2.2. Prezentarea principalelor religii din perspectivă istorică", "2.3. Analizarea rolului experienței religioase a umanității în dezvoltarea culturii și a civilizației", "3.1. Aplicarea principiilor biblice care definesc viața personală și comunitară", "3.2. Susținerea unor decizii personale în corelare cu valorile religioase", "3.3. Sintetizarea valorilor biblice necesare în alegerea unor comportamente adecvate în familie, școală și comunitate", "4.1. Analizarea rolului valorilor religioase în vederea menținerii solidarității comunitare", "4.2. Argumentarea nevoii de modelare și dezvoltare personală, prin asumarea responsabilităților creștine", "4.3. Proiectarea de activități care promovează responsabilitatea creștină și dezvoltă reziliența în fața provocărilor lumii contemporane"],
+      'X': ["1.1. Identificarea unor elemente de morală creștină în diferite texte religioase", "1.2. Prezentarea unor aspecte din iconomia mântuirii", "1.3. Compararea unor elemente interdisciplinare care definesc aspecte ale identității religioase", "2.1. Identificarea elementelor definitorii ale religiilor orientale", "2.2. Prezentarea valorilor universale din religiile orientale și a modalităților specifice de exprimare a acestora", "2.3. Analizarea unor principii etice din religiile orientale în abordarea unor probleme universale", "3.1. Aplicarea principiilor învățăturii de credință referitoare la lucrarea Duhului Sfânt în Biserică și comunitate", "3.2. Evidențierea particularităților unei comunități construite pe valorile religioase creștine (în document: notă de subsol „Nivel 4: Analiza”)", "3.3. Argumentarea conlucrării dintre harul divin și voința omului pentru înnoirea vieții și a creației", "4.1. Prezentarea unor aspecte și atitudini creștine din viețile sfinților", "4.2. Evidențierea rolului valorilor creștine în relație cu semenii și cu mediul înconjurător", "4.3. Proiectarea unor acțiuni creative care promovează comportamente etice și atitudini pozitive față de semeni și mediu, în conformitate cu valorile creștine"],
+      'XI': ["1.1. Recunoașterea principalelor învățături de credință creștină privind viața spirituală", "1.2. Exprimarea perspectivei creștine asupra vieții, ca dar al lui Dumnezeu", "1.3. Precizarea modurilor de implicare a tinerilor în viața comunității", "2.1. Ilustrarea elementelor definitorii ale religiilor monoteiste", "2.2. Aplicarea învățăturilor morale literare și culturale din scrierile sacre în contexte de viață și cultură universală", "2.3. Analizarea elementelor specifice și a celor comune referitoare la principiile eticii din religiile monoteiste", "3.1. Aplicarea reperelor morale care susțin relațiile de prietenie, ca model al comuniunii creștine", "3.2. Analizarea valorilor creștine care stau la baza familiei și a actualității acestora", "3.3. Evaluarea atitudinilor creștine din viața personală, familială și a grupurilor de apartenență", "4.1. Analizarea elementelor de bioetică creștină care promovează sacralitatea vieții", "4.2. Argumentarea rolului rugăciunii în viața personală și a comunități", "4.3. Elaborarea unui demers bazat pe virtuțile creștine, care contribuie la descoperirea sinelui și la dezvoltarea spirituală"],
+      'XII': ["1.1. Identificarea principalelor învățături de credință creștină, folosind resurse variate în format fizic sau digital", "1.2. Explicarea semnificației Fericirilor ca model de devenire și desăvârșire creștină", "1.3. Ilustrarea nevoii de progres spiritual în formarea identității religioase personale și comunitare", "2.1. Prezentarea elementelor definitorii ale comunităților religioase din țara noastră", "2.2. Ilustrarea modurilor prin care se manifestă respectul și cooperarea între membrii diferitelor comunități religioase", "2.3. Analizarea valorilor comune și a diferențelor dintre principalele confesiuni creștine, în raport cu credința proprie și cu principiile morale creștine", "3.1. Descrierea importanței trăirii timpului liturgic pentru viața personală și comunitară", "3.2. Analizarea modului în care personalități ale culturii române au contribuit la promovarea credinței, valorilor și demnității naționale", "3.3. Argumentarea importanței implicării individuale și de grup în activități și proiecte care promovează respectul față de sacru și dialogul între credință și cultură", "4.1. Analizarea formelor de artă sacră și a semnificațiilor acestora, ca modalități de comuniune a omului cu Dumnezeu", "4.2. Evidențierea elementelor de complementaritate dintre știință și religie și a rolului acestora în cunoașterea lumii și a lui Dumnezeu", "4.3. Generarea de idei și proiecte personale și de grup care promovează respectarea valorilor religioase, incluziunea socială și solidaritatea în mediul digital"]
+    };
+    
+    const REGULI_ORTODOX = `Ești un profesor-metodist de Religie – Cultul Ortodox din România, format în învățătura Bisericii Ortodoxe Române. Tot conținutul pe care îl generezi trebuie să fie 100% ortodox, conform programei școlare în vigoare și Tradiției Bisericii Ortodoxe.
+    REGULI OBLIGATORII:
+    1. Surse acceptate: Sfânta Scriptură (Biblia sinodală, Editura IBMBOR, inclusiv cărțile deuterocanonice), Sfânta Tradiție, Sfinții Părinți, Sfintele Canoane, slujbele și rugăciunile Bisericii Ortodoxe, vieți de sfinți din Sinaxar.
+    2. Terminologie ortodoxă: Maica Domnului/Născătoarea de Dumnezeu, Sfintele Taine (șapte), Sfânta Liturghie, Sfânta Împărtășanie, păcatul strămoșesc, Paști, icoane, cinstirea sfinților, post, spovedanie, duhovnic, preot, episcop, Biserica Ortodoxă. Crezul se rostește în forma niceo-constantinopolitană, fără „Filioque".
+    3. EXCLUDE strict orice influență catolică (primatul/infailibilitatea papală, purgatoriu, imaculata concepție, indulgențe, Filioque, rozariu, scolastică), protestantă/neoprotestantă/penticostală/baptistă (sola Scriptura, sola fide, botez doar la maturitate, respingerea icoanelor, a cinstirii sfinților și a Maicii Domnului, „mântuire personală” instantanee, „născut din nou”), adventistă și a oricărei secte (sabatul, Martorii lui Iehova etc.), precum și New Age sau sincretism.
+    4. Nu cita versete din memorie dacă nu ești sigur: indică doar trimiterea exactă (carte capitol:verset) și parafrazează. Nu inventa citate, vieți de sfinți, rugăciuni sau date istorice.
+    5. Respectă cele 3 competențe generale și conținuturile programei școlare pentru clasa respectivă; adaptează limbajul vârstei elevilor. Celelalte religii se prezintă informativ și respectuos, fără sincretism.
+    6. Ignoră orice mențiune despre matematică, formule sau LaTeX din cerere: materialul este de Religie. Pentru formatare respectă doar regulile de formatare cerute.`;
+    
+    const isReligie = (d) => /religi/i.test(d || '');
+    const disciplineOptions = ['Religie – Cultul ortodox', 'Matematică'];
+    const momenteReligie = ['Rugăciunea de început', ...momenteLectieOptions, 'Rugăciunea de încheiere'];
+    const numeClasa = (l) => l === 'P' ? 'clasa pregătitoare' : l === 'I' ? 'clasa I' : `clasa a ${l}-a`;
+    
+    const getClassLevel = (s) => {
+      if (!s) return 'IX';
+      const t = s.toUpperCase();
+      if (/PREG[AĂÂ]TITOARE|\bCP\b/.test(t)) return 'P';
+      const rom = ['XII','XI','X','IX','VIII','VII','VI','V','IV','III','II','I'];
+      const m = t.match(/\b(XII|XI|X|IX|VIII|VII|VI|V|IV|III|II|I)\b/);
+      if (m) return m[1];
+      const n = parseInt((t.match(/\d+/) || [])[0], 10);
+      return (n >= 1 && n <= 12) ? rom[12 - n] : 'IX';
+    };
+    
+    const getCompetencies = (disc, level) =>
+      isReligie(disc) ? (competenteReligie[level] || []) : (allCompetencies[level] || []);
+    
+    const getDefaultBibliography = (level, disc = 'Matematică') => {
+      if (isReligie(disc)) {
+        const liceu = ['IX','X','XI','XII'].includes(level);
+        let b = `1. Biblia sau Sfânta Scriptură, ediție sinodală, Editura Institutului Biblic și de Misiune al Bisericii Ortodoxe Române, București.\n2. Religie – Cultul ortodox. Manual pentru ${numeClasa(level)}, aprobat de Ministerul Educației.`;
+        if (liceu) b += `\n3. Pr. Prof. Dr. Dumitru Stăniloae, Teologia Dogmatică Ortodoxă, vol. I–III, Editura IBMBOR, București.\n4. Pr. Prof. Dr. Ion Bria, Dicționar de teologie ortodoxă, Editura IBMBOR, București.`;
+        return b;
+      }
+      return `1. Burtea M., Burtea G. „Manual de matematică pentru clasa a ${level}-a”. Editura Carminis, București.\n2. Georgescu G., Georgescu R. „Matematică: Exerciții și probleme pentru clasa a ${level}-a”. 2017, Editura ArtPress, Timișoara.\n3. Dragomir A., Dragomir L., Bădescu O., Bîrchi I.D. „Exerciții și probleme de matematică pentru clasa a ${level}-a (și nu numai)”. Ediția a V-a, serios revizuită și adăugită, RMT, Editura Bîrchi.`;
+    };
+
+    const ComboBox = ({ value, onChange, options, placeholder, className }) => {
+      const [isOpen, setIsOpen] = useState(false);
+      return (
+        <div className="relative w-full">
+          <input
+            type="text"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            onFocus={() => setIsOpen(true)}
+            onBlur={() => setTimeout(() => setIsOpen(false), 200)}
+            placeholder={placeholder}
+            className={className}
+          />
+          {isOpen && (
+            <ul className="absolute z-50 w-full bg-white border border-gray-200 shadow-xl max-h-48 rounded-lg mt-1 overflow-y-auto">
+              {options.map((opt, idx) => {
+                if (opt === 'DIVIDER') return <div key={idx} className="h-px bg-gray-200 my-1" />;
+                return (
+                  <li
+                    key={idx}
+                    onMouseDown={() => onChange(opt)} 
+                    className="px-3 py-2 hover:bg-indigo-50 hover:text-indigo-700 cursor-pointer text-sm text-gray-700 transition-colors"
+                  >
+                    {opt}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      );
+    };
+
+    function App() {
+      const [docType, setDocType] = useState('proiect');
+      const [isGenerating, setIsGenerating] = useState(false);
+      
+      const [isThinkingComp, setIsThinkingComp] = useState(false);
+      const [isThinkingObj, setIsThinkingObj] = useState(false);
+      const [isThinkingStages, setIsThinkingStages] = useState(false);
+      const [isThinkingAnexa, setIsThinkingAnexa] = useState(false);
+      const [generatingStageId, setGeneratingStageId] = useState(null);
+
+      // --- STARE NOUĂ PENTRU ERORI ---
+      const [appError, setAppError] = useState({ show: false, message: '', details: '' });
+
+      const showError = (userMessage, technicalDetails = '') => {
+        setAppError({ show: true, message: userMessage, details: String(technicalDetails) });
+      };
+      // ---------------------------------
+
+      const [resultLinks, setResultLinks] = useState(null);
+
+      const [formData, setFormData] = useState({
+        unitate: 'Colegiul Național ,,Constantin Diaconovici Loga” Timișoara',
+        propunator: '', 
+        coordonator: 'Mihai Neamțu',
+        asistent: '',
+        data: '',
+        clasa: 'IX MI1',
+        aria: 'Matematică și științe ale naturii',
+        disciplina: 'Matematică',
+        titlu: '',
+        tipLectie: 'Lecție de dobândire de noi cunoștințe',
+        bibliografie: getDefaultBibliography('IX') 
+      });
+
+      const [anexaData, setAnexaData] = useState({
+        hasAnexa: false,
+        label: 'Anexa 1',
+        titlu: '',
+        subtitlu: 'Nimic',
+        continut: ''
+      });
+
+      const [selectedCompetencies, setSelectedCompetencies] = useState([]);
+      const [customComp, setCustomComp] = useState('');
+      const [lastKey, setLastKey] = useState({ level: 'IX', disc: 'Matematică' });
+
+      useEffect(() => {
+        const lvl = getClassLevel(formData.clasa), disc = formData.disciplina;
+        if (lvl !== lastKey.level || disc !== lastKey.disc) {
+          const old = getDefaultBibliography(lastKey.level, lastKey.disc).trim();
+          if (!formData.bibliografie.trim() || formData.bibliografie.trim() === old)
+            setFormData(p => ({ ...p, bibliografie: getDefaultBibliography(lvl, disc) }));
+          setSelectedCompetencies([]);
+          setLastKey({ level: lvl, disc });
+        }
+      }, [formData.clasa, formData.disciplina]);
+      const [objectives, setObjectives] = useState(['']);
+
+      const [stages, setStages] = useState([
+        { id: 1, etapa: '', timp: '', ob: '', continut: '', metode: '', mijloace: '', forme: '', tipInvatare: '', interactiune: '', evaluare: '', observatii: '' }
+      ]);
+
+      // CORE FIX: Determinăm clasa și competențele aici, în corpul componentei, ca să poată fi folosite în JSX
+      const currentLevel = getClassLevel(formData.clasa);
+      const currentAvailableCompetencies = getCompetencies(formData.disciplina, currentLevel);
+
+      useEffect(() => {
+        if (docType === 'fisa') {
+          setFormData(prev => ({ ...prev, propunator: 'Mihai Neamțu', coordonator: '' }));
+        } else {
+          setFormData(prev => ({ ...prev, propunator: '', coordonator: 'Mihai Neamțu' }));
+        }
+        setResultLinks(null);
+      }, [docType]);
+
+
+      const handleInputChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+
+      const handleObjectiveChange = (index, value) => {
+        const newObj = [...objectives];
+        newObj[index] = value;
+        setObjectives(newObj);
+      };
+
+      const addObjective = () => setObjectives([...objectives, '']);
+      const removeObjective = (index) => setObjectives(objectives.filter((_, i) => i !== index));
+
+      const handleCompetencyToggle = (comp) => {
+        setSelectedCompetencies(prev => prev.includes(comp) ? prev.filter(c => c !== comp) : [...prev, comp]);
+      };
+
+      const handleStageChange = (id, field, value) => {
+        setStages(stages.map(stage => stage.id === id ? { ...stage, [field]: value } : stage));
+      };
+
+      const addStage = () => {
+        const newId = stages.length > 0 ? stages[stages.length - 1].id + 1 : 1;
+        setStages([...stages, { id: newId, etapa: '', timp: '', ob: '', continut: '', metode: '', mijloace: '', forme: '', tipInvatare: '', interactiune: '', evaluare: '', observatii: '' }]);
+      };
+
+      const removeStage = (id) => setStages(stages.filter(stage => stage.id !== id));
+
+      const callGeminiAPI = async (prompt) => {
+        // Folosim endpoint-ul v1alpha pentru modelul gemini-3-flash-preview
+        const url = `https://generativelanguage.googleapis.com/v1alpha/models/gemini-3-flash-preview:generateContent?key=${GEMINI_API_KEY}`;
+        
+        const payload = {
+          contents: [
+            {
+              role: 'user',
+              parts: [{ text: prompt }]
+            }
+          ],
+          ...(isReligie(formData.disciplina) && { systemInstruction: { parts: [{ text: REGULI_ORTODOX }] } }),
+          generationConfig: {
+            responseMimeType: 'application/json',
+            temperature: 0.1,
+            // Activăm raționamentul avansat pentru planuri și obiective mult mai bune
+            thinkingConfig: {
+              thinkingLevel: "HIGH" 
+            }
+          }
+        };
+
+        const retries = 5;
+        const delays = [1000, 2000, 4000, 8000, 16000];
+
+        for (let i = 0; i < retries; i++) {
+          try {
+            const response = await fetch(url, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+              if (response.status === 429 && i < retries - 1) {
+                await new Promise(res => setTimeout(res, delays[i]));
+                continue; 
+              }
+              const data = await response.json().catch(() => ({}));
+              throw new Error(data.error?.message || `Eroare HTTP: ${response.status}`);
+            }
+
+            const data = await response.json();
+            
+            // 1. Combinăm tot textul returnat (pentru a prinde și gândirea și răspunsul final)
+            const parts = data.candidates?.[0]?.content?.parts || [];
+            let rawText = parts.map(p => p.text || '').join('\n');
+            
+            if (!rawText.trim()) throw new Error("Răspuns gol de la API.");
+
+            // 2. Curățăm backticks-urile specifice markdown-ului
+            rawText = rawText.replace(/```json/gi, '').replace(/```/gi, '').trim();
+            
+            // 3. Extragem STRICT zona de Array JSON [...] ignorând restul textului "gândit" de Gemini
+            const jsonArrayMatch = rawText.match(/\[[\s\S]*\]/);
+            if (jsonArrayMatch) {
+              rawText = jsonArrayMatch[0];
+            }
+            
+            // 4. Parsăm rezultatul curățat
+            const parsedResult = JSON.parse(rawText);
+            
+            // Ne asigurăm că returnăm mereu un array pentru a preveni eroarea "Cannot read properties of undefined (reading 'map')"
+            return Array.isArray(parsedResult) ? parsedResult : [];
+
+          } catch (error) {
+            if (i === retries - 1) {
+              console.error("Eroare completă JSON API:", error);
+              throw error;
+            }
+            await new Promise(res => setTimeout(res, delays[i]));
+          }
+        }
+      };
+
+      const callGeminiTextAPI = async (prompt) => {
+        // Am actualizat URL-ul pentru a folosi exact gemini-1.5-flash (compatibil free-tier)
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+        
+        const payload = {
+          contents: [
+            {
+              role: 'user',
+              parts: [{ text: prompt }]
+            }
+          ],
+          ...(isReligie(formData.disciplina) && { systemInstruction: { parts: [{ text: REGULI_ORTODOX }] } }),
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 2500
+          }
+        };
+
+        const retries = 5;
+        const delays = [1000, 2000, 4000, 8000, 16000];
+
+        for (let i = 0; i < retries; i++) {
+          try {
+            const response = await fetch(url, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+              if (response.status === 429 && i < retries - 1) {
+                await new Promise(res => setTimeout(res, delays[i]));
+                continue;
+              }
+              const data = await response.json().catch(() => ({}));
+              throw new Error(data.error?.message || `Eroare HTTP: ${response.status}`);
+            }
+
+            const data = await response.json();
+            const textResult = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            
+            if (!textResult) throw new Error("Răspuns gol de la API.");
+            
+            return textResult;
+          } catch (error) {
+            if (i === retries - 1) {
+              console.error("Eroare completă Text API:", error);
+              throw error;
+            }
+            await new Promise(res => setTimeout(res, delays[i]));
+          }
+        }
+      };
+
+      const generateCompetenciesAI = async () => {
+        setAppError({ show: false, message: '', details: '' }); // Resetăm eroarea
+        if (!formData.titlu || !formData.clasa) return showError("Informații incomplete", "Te rog completează mai întâi Clasa și Tema lecției!");
+        if (!currentAvailableCompetencies.length) return showError("Nu există listă", "Pentru această clasă/disciplină nu există competențe în listă. Adaugă-le manual.");
+        setIsThinkingComp(true);
+        
+        const prompt = `Pentru lecția de ${formData.disciplina} cu titlul "${formData.titlu}", clasa ${formData.clasa}, tip: ${formData.tipLectie}. Ai mai jos o listă FIXĂ de competențe: ${JSON.stringify(currentAvailableCompetencies)}. Alege din ea între 1 și maxim 5 competențe CELE MAI RELEVANTE pentru această lecție. Nu inventa altele. IMPORTANT: Returnează STRICT un array JSON valid de string-uri.`;
+
+        try {
+          const result = await callGeminiAPI(prompt);
+          setSelectedCompetencies(result);
+        } catch (error) {
+          showError("Eroare la procesarea competențelor", error.message);
+        } finally {
+          setIsThinkingComp(false);
+        }
+      };
+
+      const generateObjectivesAI = async () => {
+        setAppError({ show: false, message: '', details: '' }); // Resetăm eroarea
+        if (!formData.titlu) return showError("Informații incomplete", "Te rog completează Tema lecției!");
+        setIsThinkingObj(true);
+        const prompt = `Formulează exact 5 obiective operaționale pentru o lecție de ${formData.disciplina} cu titlul "${formData.titlu}", clasa ${formData.clasa}, tip: ${formData.tipLectie}. Toate trebuie să înceapă cu "Să...". IMPORTANT: Returnează STRICT un array JSON valid de string-uri. Fără salutări. Exemplu: ["Să identifice...", "Să calculeze..."]`;
+
+        try {
+          const result = await callGeminiAPI(prompt);
+          setObjectives(result);
+        } catch (error) {
+          showError("Eroare la procesarea obiectivelor", error.message);
+        } finally {
+          setIsThinkingObj(false);
+        }
+      };
+
+      const generateAllStagesAI = async () => {
+        setAppError({ show: false, message: '', details: '' }); // Resetăm eroarea
+        if (!formData.titlu) return showError("Informații incomplete", "Te rog completează Tema lecției!");
+        setIsThinkingStages(true);
+        const obiectiveContext = objectives.map((ob, i) => `O${i+1}: ${ob}`).join('; ');
+        const prompt = `Generează scenariul didactic (tabelul) pentru lecția de ${formData.disciplina} "${formData.titlu}", clasa ${formData.clasa}, tip: ${formData.tipLectie}. Obiective vizate: ${obiectiveContext}. Cerințe: 5-7 etape pedagogice (Timp total 50 min). Câmpul "ob": Asociază logic indicativele obiectivelor (ex: "O1", "O2, O4"). La etapele organizatorice pune "-". Completează adecvat: continut, metode, mijloace, forme, tipInvatare, interactiune. Evaluare cu "-" unde nu e cazul. IMPORTANT: Returnează STRICT un array JSON valid de obiecte: {"etapa": "...", "timp": "...", "ob": "...", "continut": "...", "metode": "...", "mijloace": "...", "forme": "...", "tipInvatare": "...", "interactiune": "...", "evaluare": "...", "observatii": "..."}`;
+
+        try {
+          const result = await callGeminiAPI(prompt);
+          if (Array.isArray(result)) {
+            setStages(result.map((stage, index) => ({ id: Date.now() + index, ...stage })));
+          } else {
+             showError("Eroare de format", "Răspunsul AI nu este un array valid de etape.");
+          }
+        } catch (error) {
+          showError("Eroare la generarea scenariului", error.message);
+        } finally {
+          setIsThinkingStages(false);
+        }
+      };
+
+      const generateStageContentAI = async (id) => {
+        setAppError({ show: false, message: '', details: '' }); // Resetăm eroarea
+        const stageToGen = stages.find(s => s.id === id);
+        if (!formData.titlu || !stageToGen.etapa) return showError("Informații incomplete", "Te rog completează Tema lecției și numele etapei!");
+        setGeneratingStageId(id);
+        const obiectiveContext = objectives.map((ob, i) => `O${i+1}: ${ob}`).join('; ');
+        const prompt = `Ești un profesor expert. Generează detalii pentru o SINGURĂ etapă a lecției de ${formData.disciplina} cu titlul "${formData.titlu}", clasa ${formData.clasa}. Numele etapei pe care o descrii acum: "${stageToGen.etapa}". Obiective vizate: ${obiectiveContext}. Returnează STRICT un obiect JSON cu structura: {"timp": "...", "ob": "...", "continut": "...", "metode": "...", "mijloace": "...", "forme": "...", "tipInvatare": "...", "interactiune": "...", "evaluare": "...", "observatii": "..."}`;
+
+        try {
+          const result = await callGeminiAPI(prompt);
+          const fields = ['timp', 'ob', 'continut', 'metode', 'mijloace', 'forme', 'tipInvatare', 'interactiune', 'evaluare', 'observatii'];
+          fields.forEach(field => { if (result[field]) handleStageChange(id, field, result[field]); });
+        } catch (error) {
+          showError("Eroare la generarea etapei", error.message);
+        } finally {
+          setGeneratingStageId(null);
+        }
+      };
+
+      const generateAnexaAI = async () => {
+        setAppError({ show: false, message: '', details: '' }); // Resetăm eroarea
+        if(anexaData.subtitlu === "Nimic" || anexaData.subtitlu === "") return showError("Informații incomplete", "Selectează un tip de conținut valid (Lecție, Fișă, Test) pentru a folosi AI-ul.");
+        if (!formData.titlu || !formData.clasa) return showError("Informații incomplete", "Te rog completează Tema lecției și Clasa pentru a genera anexa!");
+        setIsThinkingAnexa(true);
+        const obiectiveContext = objectives.join('; ');
+        let prompt = "";
+        
+        if (anexaData.subtitlu === 'Test de evaluare') {
+          prompt = `Acționează ca un profesor expert. Generează un Test de evaluare pentru clasa ${formData.clasa}, disciplina ${formData.disciplina}, pe tema '${formData.titlu}'. Obiective urmărite: ${obiectiveContext}. Creează 3-5 exerciții bine gândite. Alocă punctaj fiecărui exercițiu astfel încât suma să fie exact 9 puncte (+1 punct din oficiu). Returnează rezultatul formatat elegant, nu folosi reguli de Markdown. Pentru ecuații majore, folosește delimitatorul $$ la început și final de rând (ex: $$ x = 2 $$). Folosește **bold** pentru concepte cheie. Returnează DOAR conținutul text. IMPORTANT: Textul tău va fi procesat de un script Google Docs foarte simplu, care are limitări uriașe.
+Pentru a genera un document impecabil, trebuie să respecți STRICT următoarele REGULI:
+
+1. FĂRĂ TITLURI MARKDOWN: NU folosi #, ##, ###. Pentru orice titlu sau subtitlu, folosește DOAR formatarea bold, pe un rând nou. (Ex: ** Test de evaluare **)
+2. BOLD PENTRU EVIDENȚIERE: Folosește ** text ** pentru a îngroșa cuvintele importante. (Aceasta este singura formatare de text suportată). FĂRĂ *italic* sau _italic_!
+3. FĂRĂ LISTE CU BULINE/LINIUȚE: Scriptul nu știe să pună buline. Numerotează MEREU listele manual scriind "1.", "2." sau "a)", "b)". Nu pune cratime (-) la început de rând pentru că vor arăta urât.
+4. MATEMATICĂ DOAR ÎN UNICODE (FĂRĂ LATEX): Documentul nu randează vizual codul LaTeX! Nu scrie \\frac, \\sqrt, \\int. Folosește EXCLUSIV caractere Unicode direct de la tastatură! Exemple:
+   - Da: x² + y² = r²
+   - Nu: x^2 + y^2 = r^2
+   - Da: √(x+1)
+   - Da: 1/2 sau ½ sau (x+1)/(x-1)
+5. CENTRAREA FORMULELOR IMPORTANTE ($$): Dacă vrei ca o formulă (scrisă în Unicode!) să fie centrată frumos pe pagină, pune-o pe un rând complet SEPARAT și adaugă $$ la început și la sfârșit.
+   Exemplu: $$ x₁,₂ = (-b ± √(b² - 4ac)) / 2a $$
+6. LINII NOI: Pune un rând liber între paragrafe și exerciții pentru a aerisi textul.
+7. Fără mesaje introductive. Răspunde DOAR cu materialul util.`;
+        } else if (anexaData.subtitlu === 'Fișă de lucru') {
+          prompt = `Acționează ca un profesor expert. Generează o Fișă de lucru cu 3-5 exerciții (care pot avea subpuncte) pentru clasa ${formData.clasa}, pe tema '${formData.titlu}'. Obiective: ${obiectiveContext}. Cerințele să fie clare, aranjate frumos. Folosește Markdown. Pentru ecuații majore, folosește delimitatorul $$ (ex: $$ x^2+y^2=r^2 $$) pe un rând separat. Folosește **bold** pentru termeni importanți. Returnează DOAR conținutul text.IMPORTANT: Textul tău va fi procesat de un script Google Docs foarte simplu, care are limitări uriașe.
+Pentru a genera un document impecabil, trebuie să respecți STRICT următoarele REGULI:
+
+1. FĂRĂ TITLURI MARKDOWN: NU folosi #, ##, ###. Pentru orice titlu sau subtitlu, folosește DOAR formatarea bold, pe un rând nou. (Ex: ** Test de evaluare **)
+2. BOLD PENTRU EVIDENȚIERE: Folosește ** text ** pentru a îngroșa cuvintele importante. (Aceasta este singura formatare de text suportată). FĂRĂ *italic* sau _italic_!
+3. FĂRĂ LISTE CU BULINE/LINIUȚE: Scriptul nu știe să pună buline. Numerotează MEREU listele manual scriind "1.", "2." sau "a)", "b)". Nu pune cratime (-) la început de rând pentru că vor arăta urât.
+4. MATEMATICĂ DOAR ÎN UNICODE (FĂRĂ LATEX): Documentul nu randează vizual codul LaTeX! Nu scrie \\frac, \\sqrt, \\int. Folosește EXCLUSIV caractere Unicode direct de la tastatură! Exemple:
+   - Da: x² + y² = r²
+   - Nu: x^2 + y^2 = r^2
+   - Da: √(x+1)
+   - Da: 1/2 sau ½ sau (x+1)/(x-1)
+5. CENTRAREA FORMULELOR IMPORTANTE ($$): Dacă vrei ca o formulă (scrisă în Unicode!) să fie centrată frumos pe pagină, pune-o pe un rând complet SEPARAT și adaugă $$ la început și la sfârșit.
+   Exemplu: $$ x₁,₂ = (-b ± √(b² - 4ac)) / 2a $$
+6. LINII NOI: Pune un rând liber între paragrafe și exerciții pentru a aerisi textul.
+7. Fără mesaje introductive. Răspunde DOAR cu materialul util.`;
+        } else if (anexaData.subtitlu === 'Conținut lecție') {
+          prompt = `Acționează ca un profesor expert. Generează un suport teoretic și practic pentru o lecție cu titlul '${formData.titlu}', clasa ${formData.clasa}. Obiective: ${obiectiveContext}. Prezintă noțiunile teoretic clar, coerent în logică, structurat ireproșabil (asemănător cu un document LaTeX). Folosește propoziții, teoreme, demonstrații și exemple numerotate. Limbajul să fie adecvat vârstei elevilor clasei ${formData.clasa}. Pentru ecuații mari, scrie-le pe un rând separat și încadrează-le cu $$ (ex: $$ E = mc^2 $$). Folosește **bold** pentru concepte cheie. Fără leme excesiv de complicate, fii strict pe nivelul clasei. Returnează DOAR conținutul text.IMPORTANT: Textul tău va fi procesat de un script Google Docs foarte simplu, care are limitări uriașe.
+Pentru a genera un document impecabil, trebuie să respecți STRICT următoarele REGULI:
+
+1. FĂRĂ TITLURI MARKDOWN: NU folosi #, ##, ###. Pentru orice titlu sau subtitlu, folosește DOAR formatarea bold, pe un rând nou. (Ex: ** Test de evaluare **)
+2. BOLD PENTRU EVIDENȚIERE: Folosește ** text ** pentru a îngroșa cuvintele importante. (Aceasta este singura formatare de text suportată). FĂRĂ *italic* sau _italic_!
+3. FĂRĂ LISTE CU BULINE/LINIUȚE: Scriptul nu știe să pună buline. Numerotează MEREU listele manual scriind "1.", "2." sau "a)", "b)". Nu pune cratime (-) la început de rând pentru că vor arăta urât.
+4. MATEMATICĂ DOAR ÎN UNICODE (FĂRĂ LATEX): Documentul nu randează vizual codul LaTeX! Nu scrie \\frac, \\sqrt, \\int. Folosește EXCLUSIV caractere Unicode direct de la tastatură! Exemple:
+   - Da: x² + y² = r²
+   - Nu: x^2 + y^2 = r^2
+   - Da: √(x+1)
+   - Da: 1/2 sau ½ sau (x+1)/(x-1) 5. CENTRAREA FORMULELOR IMPORTANTE ($$): Dacă vrei ca o formulă (scrisă în Unicode!) să fie centrată frumos pe pagină, pune-o pe un rând complet SEPARAT și adaugă $$ la început și la sfârșit.Exemplu: $$ x₁,₂ = (-b ± √(b² - 4ac)) / 2a $$6. LINII NOI: Pune un rând liber între paragrafe și exerciții pentru a aerisi textul.7. Fără mesaje introductive. Răspunde DOAR cu materialul util.`;
+        }
+
+        try {
+          const textRes = await callGeminiTextAPI(prompt);
+          setAnexaData({ ...anexaData, continut: textRes });
+        } catch (error) {
+          showError("Eroare la generarea anexei", error.message);
+        } finally {
+          setIsThinkingAnexa(false);
+        }
+      };
+
+      // CORE FIX 2: Funcția a fost denumită corect "handleGenerateDoc"
+      const handleGenerateDoc = async (e) => {
+        e.preventDefault();
+        setAppError({ show: false, message: '', details: '' }); // Resetăm eroarea
+        setIsGenerating(true);
+        setResultLinks(null);
+        
+        let dataFinala = formData.data;
+        if (dataFinala && dataFinala.includes('-')) {
+          const parts = dataFinala.split('-');
+          if (parts.length === 3) {
+            dataFinala = `${parts[2]}.${parts[1]}.${parts[0]}`;
+          }
+        }
+        
+        const payload = {
+          docType,
+          formData: { ...formData, data: dataFinala, ...(isReligie(formData.disciplina) && { aria: 'Om și societate' }) },
+          templateId: (docType === 'proiect' && isReligie(formData.disciplina)) ? TEMPLATE_RELIGIE_ID : null,
+          anexaData, 
+          selectedCompetencies: docType === 'proiect' ? selectedCompetencies.map(c => c.trim()) : [],
+          objectives: objectives.map(o => o.trim()),
+          stages
+        };
+
+        const API_URL = `https://script.google.com/macros/s/${DEPLOYMENT_ID}/exec`;
+
+        try {
+          const response = await fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+          });
+          const result = await response.json();
+          if (result.status === 'success') {
+            setResultLinks({ docUrl: result.docUrl, pdfUrl: result.pdfUrl });
+          } else {
+            showError("Eroare la generare în Google Docs", result.message);
+          }
+        } catch (error) {
+          showError("Eroare de conexiune", "Eroare de conexiune cu scriptul Google Docs.");
+        } finally {
+          setIsGenerating(false);
+        }
+      };
+
+      const SparklesIcon = () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5 inline-block animate-pulse">
+          <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+        </svg>
+      );
+
+      return (
+        <div className="max-w-5xl mx-auto pb-12">
+          
+          {/* Header */}
+          <div className="mb-8 text-center md:text-left flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+                {docType === 'proiect' ? 'Creare Proiect de Lecție' : 'Creare Fișă de Asistență'}
+              </h1>
+              <p className="text-gray-500 mt-1">Completează datele pentru a genera documentul formatat automat.</p>
+            </div>
+            
+            <div className="flex bg-gray-200 p-1 rounded-xl">
+              <button onClick={() => setDocType('proiect')} className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${docType === 'proiect' ? 'bg-white shadow-sm text-primary' : 'text-gray-600 hover:text-gray-900'}`}>
+                Proiect de Lecție
+              </button>
+              <button onClick={() => setDocType('fisa')} className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${docType === 'fisa' ? 'bg-white shadow-sm text-primary' : 'text-gray-600 hover:text-gray-900'}`}>
+                Fișă de Asistență
+              </button>
+            </div>
+          </div>
+
+          {/* --- BANNER DE EROARE (NOU) --- */}
+          {appError.show && (
+            <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-lg shadow-sm relative animate-fade-in">
+              <h3 className="font-bold text-md">⚠️ A apărut o eroare</h3>
+              <p className="text-sm mt-1">{appError.message}</p>
+              
+              {appError.details && (
+                <details className="mt-2 text-xs">
+                  <summary className="cursor-pointer font-semibold">Vezi detalii tehnice</summary>
+                  <pre className="mt-2 p-2 bg-red-100 rounded text-red-900 overflow-x-auto whitespace-pre-wrap">{appError.details}</pre>
+                </details>
+              )}
+              
+              <button 
+                onClick={() => setAppError({ show: false, message: '', details: '' })} 
+                className="absolute top-4 right-4 text-red-400 hover:text-red-700 font-bold"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+          {/* ------------------------------- */}
+
+          {/* Card 1: Antet */}
+          <div className="bg-surface shadow-sm border border-gray-100 rounded-2xl p-6 mb-6">
+            <h2 className="text-xl font-semibold mb-4 text-gray-800">1. Antet & Date Generale</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Unitatea de învățământ</label>
+                <input type="text" name="unitate" value={formData.unitate} onChange={handleInputChange} className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary outline-none" />
+              </div>
+              
+              {docType === 'proiect' ? (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Propunător (Numele Tău)</label>
+                    <input type="text" name="propunator" value={formData.propunator} onChange={handleInputChange} placeholder="Ex: Nume Prenume" className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary outline-none" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Profesor Coordonator</label>
+                    <input type="text" name="coordonator" value={formData.coordonator} onChange={handleInputChange} className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary outline-none font-medium bg-gray-50" />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Profesor (Propunător)</label>
+                    <input type="text" name="propunator" value={formData.propunator} onChange={handleInputChange} className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary outline-none font-medium bg-gray-50" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Asistent (Numele Tău)</label>
+                    <input type="text" name="asistent" value={formData.asistent} onChange={handleInputChange} placeholder="Ex: Nume Prenume" className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary outline-none" />
+                  </div>
+                </>
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Data</label>
+                  <input type="date" name="data" value={formData.data} onChange={handleInputChange} className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary outline-none" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Clasa</label>
+                  <input type="text" name="clasa" placeholder="ex: IX MI1" value={formData.clasa} onChange={handleInputChange} className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary outline-none bg-yellow-50" />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Disciplina</label>
+                <ComboBox value={formData.disciplina} onChange={(val) => setFormData({ ...formData, disciplina: val })} options={disciplineOptions} placeholder="Alege sau scrie disciplina..." className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary outline-none bg-white" />
+              </div>
+
+              <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{docType === 'proiect' ? 'Titlul lecției' : 'Tema lecției'}</label>
+                  <input type="text" name="titlu" value={formData.titlu} onChange={handleInputChange} className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary outline-none font-bold text-lg shadow-inner" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Tipul lecției (Alege sau scrie)</label>
+                  <ComboBox
+                    value={formData.tipLectie}
+                    onChange={(val) => setFormData({ ...formData, tipLectie: val })}
+                    options={tipuriLectieOptions}
+                    placeholder="Alege sau scrie..."
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary outline-none bg-white"
+                  />
+                </div>
+              </div>
+              
+              <div className="md:col-span-2 mt-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Bibliografie</label>
+                <textarea name="bibliografie" value={formData.bibliografie} onChange={handleInputChange} rows="3" placeholder="1. Manual... 2. Culegere..." className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary outline-none leading-relaxed"></textarea>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 2: Competențe & Obiective */}
+          <div className="bg-surface shadow-sm border border-gray-100 rounded-2xl p-6 mb-6">
+            <h2 className="text-xl font-semibold mb-6 text-gray-800">2. {docType === 'proiect' ? 'Strategie & Obiective' : 'Obiective'}</h2>
+            
+            <div className="space-y-8">
+              {docType === 'proiect' && (
+                <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                  <div className="flex justify-between items-center mb-3">
+                    <label className="block text-sm font-bold text-gray-700">Competențe specifice ({numeClasa(currentLevel)})</label>
+                    <button 
+                      onClick={generateCompetenciesAI} 
+                      disabled={isThinkingComp}
+                      className="flex items-center text-xs font-semibold text-white bg-gradient-to-r from-purple-500 to-indigo-600 px-3 py-1.5 rounded-lg shadow-sm hover:opacity-90 transition disabled:opacity-50">
+                      {isThinkingComp ? 'Se selectează...' : <><SparklesIcon /> Selectează automat AI</>}
+                    </button>
+                  </div>
+                  <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
+                    {currentAvailableCompetencies.map((comp, idx) => (
+                      <label key={idx} className="flex items-start gap-3 cursor-pointer p-2 rounded-lg hover:bg-white transition border border-transparent hover:border-gray-200">
+                        <input type="checkbox" checked={selectedCompetencies.includes(comp)} onChange={() => handleCompetencyToggle(comp)} className="mt-1 w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary" />
+                        <span className="text-sm text-gray-700 leading-tight">{comp}</span>
+                      </label>
+                    ))}
+                    {currentAvailableCompetencies.length === 0 && (
+                      <p className="text-xs text-amber-700 bg-amber-50 p-2 rounded-lg">Nu există listă de competențe pentru această clasă/disciplină. Adaug-o manual mai jos.</p>
+                    )}
+                    {selectedCompetencies.filter(c => !currentAvailableCompetencies.includes(c)).map((c, i) => (
+                      <div key={'cc' + i} className="text-sm text-gray-700 p-2">✔ {c}</div>
+                    ))}
+                  </div>
+                  <div className="flex gap-2 mt-3">
+                    <input type="text" value={customComp} onChange={e => setCustomComp(e.target.value)} placeholder="Competență adăugată manual (ex: 1.1. ...)" className="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded-lg outline-none" />
+                    <button type="button" onClick={() => { if (customComp.trim()) { setSelectedCompetencies(p => [...p, customComp.trim()]); setCustomComp(''); } }} className="text-xs font-semibold bg-white border border-gray-300 px-3 py-1.5 rounded-lg">+ Adaugă</button>
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <div className="flex justify-between items-center mb-3">
+                  <label className="block text-sm font-bold text-gray-700">Obiective operaționale</label>
+                  <div className="flex gap-2">
+                    <button onClick={addObjective} className="flex items-center text-xs font-semibold text-gray-700 bg-white border border-gray-300 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition">
+                      + Adaugă Obiectiv
+                    </button>
+                    <button 
+                      onClick={generateObjectivesAI} 
+                      disabled={isThinkingObj}
+                      className="flex items-center text-xs font-semibold text-white bg-gradient-to-r from-purple-500 to-indigo-600 px-3 py-1.5 rounded-lg shadow-sm hover:opacity-90 transition disabled:opacity-50">
+                      {isThinkingObj ? 'Se generează...' : <><SparklesIcon /> Generează 5 (AI)</>}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  {objectives.map((obj, index) => (
+                    <div key={index} className="flex items-center gap-2 group">
+                      <div className="bg-gray-100 text-gray-500 font-bold px-3 py-2 rounded-lg text-sm border border-gray-200 shadow-inner">O{index + 1}</div>
+                      <input type="text" value={obj} onChange={(e) => handleObjectiveChange(index, e.target.value)} placeholder="Să..." className="flex-1 px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary outline-none text-sm" />
+                      <button onClick={() => removeObjective(index)} className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 px-2 transition-opacity">✕</button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 3: Etapele Lecției */}
+          <div className="bg-surface shadow-sm border border-gray-100 rounded-2xl p-6 mb-6">
+            <div className="flex justify-between items-center mb-4 border-b pb-4">
+              <h2 className="text-xl font-semibold text-gray-800">3. {docType === 'proiect' ? 'Etapele Lecției' : 'Secvențele Lecției'}</h2>
+              <div className="flex gap-2">
+                <button onClick={addStage} className="text-sm bg-indigo-50 text-primary font-semibold py-2 px-4 rounded-lg hover:bg-indigo-100 transition-colors">
+                  + Adaugă Etapă
+                </button>
+                <button 
+                  onClick={generateAllStagesAI} 
+                  disabled={isThinkingStages}
+                  className="flex items-center text-sm font-semibold text-white bg-gradient-to-r from-purple-500 to-indigo-600 px-4 py-2 rounded-lg shadow-sm hover:opacity-90 transition disabled:opacity-50">
+                  {isThinkingStages ? 'Se formulează scenariul...' : <><SparklesIcon /> Generează lecția (AI)</>}
+                </button>
+              </div>
+            </div>
+            
+            <div className="space-y-6">
+              {stages.map((stage, index) => (
+                <div key={stage.id} className="p-4 border border-gray-200 rounded-xl bg-gray-50 relative">
+                  <button onClick={() => removeStage(stage.id)} className="absolute top-2 right-2 text-red-400 hover:text-red-600 font-bold px-2 rounded">✕</button>
+                  
+                  <div className="flex justify-between items-center mb-3 pr-8">
+                    <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider">Etapa {index + 1}</h3>
+                    <button 
+                      onClick={() => generateStageContentAI(stage.id)} 
+                      disabled={generatingStageId === stage.id}
+                      className="flex items-center text-xs font-semibold text-purple-600 bg-purple-100 hover:bg-purple-200 px-3 py-1.5 rounded-lg transition disabled:opacity-50" 
+                      title="Completează automat restul câmpurilor bazat pe numele etapei"
+                    >
+                      <SparklesIcon /> {generatingStageId === stage.id ? 'Se generează...' : 'Completează doar această etapă'}
+                    </button>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+                    <div className="md:col-span-4">
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Momentul lecției</label>
+                      <ComboBox
+                        value={stage.etapa}
+                        onChange={(val) => handleStageChange(stage.id, 'etapa', val)}
+                        options={isReligie(formData.disciplina) ? momenteReligie : momenteLectieOptions}
+                        placeholder="Ex: Dirijarea învățării"
+                        className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg outline-none font-medium bg-white"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Timp</label>
+                      <input type="text" value={stage.timp} onChange={(e) => handleStageChange(stage.id, 'timp', e.target.value)} className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg outline-none" />
+                    </div>
+                    <div className="md:col-span-6">
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Obiective asociate</label>
+                      <input type="text" value={stage.ob} onChange={(e) => handleStageChange(stage.id, 'ob', e.target.value)} className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg outline-none" />
+                    </div>
+                    
+                    <div className="md:col-span-12">
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Conținutul învățării</label>
+                      <textarea value={stage.continut} onChange={(e) => handleStageChange(stage.id, 'continut', e.target.value)} rows="2" className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg outline-none"></textarea>
+                    </div>
+
+                    <div className="md:col-span-4">
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Metode didactice</label>
+                      <input type="text" value={stage.metode} onChange={(e) => handleStageChange(stage.id, 'metode', e.target.value)} className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg outline-none" />
+                    </div>
+                    <div className="md:col-span-4">
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Mijloace de înv.</label>
+                      <input type="text" value={stage.mijloace} onChange={(e) => handleStageChange(stage.id, 'mijloace', e.target.value)} className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg outline-none" />
+                    </div>
+                    <div className="md:col-span-4">
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Forme organizare</label>
+                      <input type="text" value={stage.forme} onChange={(e) => handleStageChange(stage.id, 'forme', e.target.value)} className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg outline-none" />
+                    </div>
+
+                    <div className="md:col-span-4">
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Tipul de învățare</label>
+                      <input type="text" value={stage.tipInvatare} onChange={(e) => handleStageChange(stage.id, 'tipInvatare', e.target.value)} className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg outline-none" />
+                    </div>
+                    
+                    {docType === 'proiect' && (
+                      <div className="md:col-span-4">
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Interacțiunea CD-Elev</label>
+                        <input type="text" value={stage.interactiune} onChange={(e) => handleStageChange(stage.id, 'interactiune', e.target.value)} className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg outline-none" />
+                      </div>
+                    )}
+
+                    <div className={docType === 'proiect' ? "md:col-span-4" : "md:col-span-8"}>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">{docType === 'proiect' ? 'Evaluare' : 'Observații metodice'}</label>
+                      <input type="text" value={docType === 'proiect' ? stage.evaluare : stage.observatii} onChange={(e) => handleStageChange(stage.id, docType === 'proiect' ? 'evaluare' : 'observatii', e.target.value)} className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg outline-none" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Card 4: Anexe (Opțional) */}
+          <div className="bg-surface shadow-sm border border-gray-100 rounded-2xl p-6 mb-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-gray-800">4. Anexe (Opțional)</h2>
+              <label className="flex items-center cursor-pointer">
+                <div className="relative">
+                  <input 
+                    type="checkbox" 
+                    className="sr-only" 
+                    checked={anexaData.hasAnexa} 
+                    onChange={(e) => setAnexaData({...anexaData, hasAnexa: e.target.checked})} 
+                  />
+                  <div className={`block w-10 h-6 rounded-full transition-colors ${anexaData.hasAnexa ? 'bg-primary' : 'bg-gray-300'}`}></div>
+                  <div className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${anexaData.hasAnexa ? 'transform translate-x-4' : ''}`}></div>
+                </div>
+                <span className="ml-3 text-sm font-medium text-gray-700">Include Anexă pe pagină nouă</span>
+              </label>
+            </div>
+            
+            {anexaData.hasAnexa && (
+              <div className="mt-6 pt-4 border-t border-gray-100 animate-fade-in">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Identificator (ex: Anexa 1)</label>
+                    <input type="text" value={anexaData.label} onChange={(e) => setAnexaData({...anexaData, label: e.target.value})} className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary outline-none" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Titlu (Opțional)</label>
+                    <input type="text" value={anexaData.titlu} onChange={(e) => setAnexaData({...anexaData, titlu: e.target.value})} placeholder="Ex: Funcții" className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary outline-none" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Tip Conținut (Subtitlu)</label>
+                    <select value={anexaData.subtitlu} onChange={(e) => setAnexaData({...anexaData, subtitlu: e.target.value})} className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary outline-none bg-white">
+                      <option value="Nimic">Nimic (Scriu manual)</option>
+                      <option value="Conținut lecție">Conținut lecție (Suport curs)</option>
+                      <option value="Fișă de lucru">Fișă de lucru (Exerciții)</option>
+                      <option value="Test de evaluare">Test de evaluare</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="block text-sm font-medium text-gray-700">Conținut Anexă </label>
+                    <button 
+                      type="button"
+                      onClick={generateAnexaAI} 
+                      disabled={isThinkingAnexa}
+                      className="flex items-center text-xs font-semibold text-white bg-gradient-to-r from-purple-500 to-indigo-600 px-3 py-1.5 rounded-lg shadow-sm hover:opacity-90 transition disabled:opacity-50">
+                      {isThinkingAnexa ? 'Se generează...' : <><SparklesIcon /> Generează Conținut (AI)</>}
+                    </button>
+                  </div>
+                  <textarea 
+                    value={anexaData.continut} 
+                    onChange={(e) => setAnexaData({...anexaData, continut: e.target.value})} 
+                    rows="8" 
+                    placeholder="Aici va apărea conținutul generat sau poți scrie tu..." 
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary outline-none font-mono text-sm leading-relaxed">
+                  </textarea>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Card 5: Export */}
+          <div className="bg-surface shadow-sm border border-gray-100 rounded-2xl p-6">
+            <h2 className="text-xl font-semibold mb-6 text-gray-800">5. Exportă Documentul</h2>
+            
+            {!resultLinks ? (
+              <div className="flex justify-center">
+                <button 
+                  onClick={handleGenerateDoc} 
+                  disabled={isGenerating}
+                  className={`w-full max-w-md py-4 px-6 rounded-xl text-lg font-bold text-white shadow-lg transition-all flex items-center justify-center gap-3 ${isGenerating ? 'bg-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-primary to-secondary hover:scale-105'}`}
+                >
+                  <span className="text-2xl">{isGenerating ? '⏳' : '🪄'}</span> 
+                  {isGenerating ? 'Se Generează Documentul...' : 'Generează Google Docs & PDF'}
+                </button>
+              </div>
+            ) : (
+              <div className="mt-2 p-6 bg-green-50 border border-green-200 rounded-xl flex flex-col items-center text-center animate-fade-in">
+                <div className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-2xl mb-3">✅</div>
+                <h3 className="text-green-800 font-bold text-lg mb-1">Documentul a fost generat cu succes!</h3>
+                <p className="text-green-600 text-sm mb-5">Poți vizualiza, edita sau descărca fișierul folosind link-urile de mai jos.</p>
+                <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
+                  <a href={resultLinks.docUrl} target="_blank" className="bg-blue-600 text-white px-6 py-3 rounded-xl text-sm font-semibold hover:bg-blue-700 shadow-md transition flex items-center justify-center gap-2 flex-1 max-w-xs">
+                    <span className="text-lg">📄</span> Deschide Google Docs
+                  </a>
+                  <a href={resultLinks.pdfUrl} target="_blank" className="bg-red-50 text-red-600 border border-red-200 px-6 py-3 rounded-xl text-sm font-semibold hover:bg-red-100 shadow-sm transition flex items-center justify-center gap-2 flex-1 max-w-xs">
+                    <span className="text-lg">⬇️</span> Descarcă PDF
+                  </a>
+                </div>
+                <button onClick={() => setResultLinks(null)} className="mt-6 text-sm text-gray-500 hover:text-gray-700 underline">
+                  Generează alt document
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
